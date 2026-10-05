@@ -178,6 +178,54 @@
       font-weight: bold;
     }
 
+    /* CUSTOM REFRESH WARNING MODAL STYLES */
+    .overlay-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(15, 23, 42, 0.95);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .overlay-modal.active {
+      display: flex;
+    }
+
+    .modal-box {
+      background: #1e293b;
+      border: 2px solid #ef4444;
+      border-radius: 16px;
+      padding: 32px 24px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-box h2 {
+      color: #f87171;
+      font-size: 1.6rem;
+      margin: 0;
+    }
+
+    /* SHAKE PENALTY ANIMATION */
+    .penalty-shake {
+      animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+    }
+
+    @keyframes shake {
+      10%, 90% { transform: translate3d(-2px, 0, 0); }
+      20%, 80% { transform: translate3d(4px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-8px, 0, 0); }
+      40%, 60% { transform: translate3d(8px, 0, 0); }
+    }
+
     @media (max-width: 480px) {
       body {
         padding: 0;
@@ -197,9 +245,9 @@
   
   <!-- START SCREEN -->
   <div id="start-screen" class="screen active">
-    <h1>A2 Revision Quiz</h1>
+    <h1>Deutsch A2 Revision Quiz</h1>
     <p>Test your German grammar before moving into B1. This test consists of 25 questions covering past tenses, connectors, prepositions, adjective endings, and modal verbs.</p>
-    <p><em>Note: Leaving or reloading the page during the quiz will restart your attempt.</em></p>
+    <p><em>Note: Refreshing or exiting during the quiz is locked. Scanning the QR code is required to start a new attempt.</em></p>
     <div style="flex: 1;"></div>
     <button id="start-btn">Start Quiz</button>
   </div>
@@ -225,9 +273,16 @@
     <h2>Quiz Complete!</h2>
     <p id="score-text">Your score: 0 / 25</p>
     <div id="review-container" style="flex: 1; overflow-y: auto; margin-bottom: 20px;"></div>
-    <button id="restart-btn">Try Again</button>
   </div>
 
+</div>
+
+<!-- PERMANENT CUSTOM WARNING SCREEN -->
+<div class="overlay-modal reload-warning-modal" id="reloadModal">
+  <div class="modal-box reload-warning-box" id="modalBox">
+    <h2>🚨 REFRESH LOCKED</h2>
+    <p style="font-size: 0.95rem; color: #c7d2fe; margin-top: 12px;">Scan the QR code again freshly to restart the puzzle.</p>
+  </div>
 </div>
 
 <script>
@@ -370,21 +425,52 @@
   const startBtn = document.getElementById("start-btn");
   const prevBtn = document.getElementById("prev-btn");
   const nextBtn = document.getElementById("next-btn");
-  const restartBtn = document.getElementById("restart-btn");
   const instructionElem = document.getElementById("instruction");
   const questionTextElem = document.getElementById("question-text");
   const userAnswerInput = document.getElementById("user-answer");
   const progressElem = document.getElementById("progress");
+  const reloadModal = document.getElementById("reloadModal");
+  const modalBox = document.getElementById("modalBox");
 
-  // Prevent Navigation or Reload during active quiz
-  window.addEventListener("beforeunload", (e) => {
-    if (quizActive) {
-      e.preventDefault();
-      e.returnValue = ""; // Triggers browser native confirmation dialog
+  // Function to trigger the shake penalty animation
+  function triggerPenaltyAnimation() {
+    modalBox.classList.remove("penalty-shake");
+    // Trigger reflow to restart animation
+    void modalBox.offsetWidth;
+    modalBox.classList.add("penalty-shake");
+  }
+
+  // Check URL parameters for reset key from QR code
+  const urlParams = new URLSearchParams(window.location.search);
+  const resetParam = urlParams.get('reset');
+
+  // Scanning teacher's QR code with ?reset=true clears the lock
+  if (resetParam === 'true') {
+    localStorage.removeItem("quiz_status");
+    localStorage.removeItem("quiz_score");
+    localStorage.removeItem("quiz_answers");
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+
+  // On page load, verify if the quiz was already active or completed
+  window.addEventListener("DOMContentLoaded", () => {
+    const status = localStorage.getItem("quiz_status");
+
+    if (status === "in_progress" || status === "completed") {
+      reloadModal.classList.add("active");
+      triggerPenaltyAnimation();
     }
   });
 
-  // Intercept Keyboard Shortcuts for Reload (F5, Ctrl+R, Cmd+R)
+  // Native navigation warning prompt
+  window.addEventListener("beforeunload", (e) => {
+    if (quizActive) {
+      e.preventDefault();
+      e.returnValue = "";
+    }
+  });
+
+  // Intercept Keyboard Reload Shortcuts (F5, Ctrl+R, Cmd+R)
   window.addEventListener("keydown", (e) => {
     if (quizActive) {
       const isF5 = e.key === "F5";
@@ -392,11 +478,8 @@
       
       if (isF5 || isCtrlR) {
         e.preventDefault();
-        const confirmLeave = confirm("Warning: Refreshing will cause you to lose your quiz progress. Are you sure you want to reload?");
-        if (confirmLeave) {
-          quizActive = false;
-          location.reload();
-        }
+        reloadModal.classList.add("active");
+        triggerPenaltyAnimation();
       }
     }
   });
@@ -404,6 +487,7 @@
   // Start Quiz
   startBtn.addEventListener("click", () => {
     quizActive = true;
+    localStorage.setItem("quiz_status", "in_progress");
     startScreen.classList.remove("active");
     quizScreen.classList.add("active");
     loadQuestion(0);
@@ -451,17 +535,33 @@
   // Finish Quiz
   function finishQuiz() {
     quizActive = false;
+    
+    let score = 0;
+    questions.forEach((q, i) => {
+      const userAns = userAnswers[i];
+      if (userAns.toLowerCase() === q.answer.toLowerCase()) score++;
+    });
+
+    localStorage.setItem("quiz_status", "completed");
+    localStorage.setItem("quiz_score", score);
+    localStorage.setItem("quiz_answers", JSON.stringify(userAnswers));
+
+    showCompletedResults();
+  }
+
+  function showCompletedResults() {
     quizScreen.classList.remove("active");
     resultScreen.classList.add("active");
 
-    let score = 0;
+    const savedAnswers = JSON.parse(localStorage.getItem("quiz_answers")) || [];
+    const savedScore = localStorage.getItem("quiz_score") || 0;
+
     const reviewContainer = document.getElementById("review-container");
     reviewContainer.innerHTML = "";
 
     questions.forEach((q, i) => {
-      const userAns = userAnswers[i];
+      const userAns = savedAnswers[i] || "";
       const isCorrect = userAns.toLowerCase() === q.answer.toLowerCase();
-      if (isCorrect) score++;
 
       const div = document.createElement("div");
       div.className = "result-item";
@@ -473,16 +573,8 @@
       reviewContainer.appendChild(div);
     });
 
-    document.getElementById("score-text").textContent = `Your score: ${score} / ${questions.length}`;
+    document.getElementById("score-text").textContent = `Your score: ${savedScore} / ${questions.length}`;
   }
-
-  // Restart Quiz
-  restartBtn.addEventListener("click", () => {
-    userAnswers = new Array(questions.length).fill("");
-    currentQuestionIndex = 0;
-    resultScreen.classList.remove("active");
-    startScreen.classList.add("active");
-  });
 </script>
 
 </body>
