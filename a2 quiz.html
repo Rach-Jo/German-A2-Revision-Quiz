@@ -286,6 +286,7 @@
 </div>
 
 <script>
+  // Corrected questions array with acceptable answers as arrays where applicable
   const questions = [
     {
       instruction: "Fill in the correct modal verb in the past tense (Präteritum).",
@@ -300,8 +301,10 @@
     {
       instruction: "Combine the sentences using the conjunction in brackets. Mind the word order!",
       question: "Ich lerne Deutsch. Ich möchte in Deutschland arbeiten. (weil)",
-      answer: "Ich lerne Deutsch, weil ich in Deutschland arbeiten möchte.",
-              "Weil ich in Deutschland arbeiten möchte, lerne ich Deutsch."
+      answer: [
+        "Ich lerne Deutsch, weil ich in Deutschland arbeiten möchte.",
+        "Weil ich in Deutschland arbeiten möchte, lerne ich Deutsch."
+      ]
     },
     {
       instruction: "Fill in the correct adjective ending.",
@@ -331,7 +334,7 @@
     {
       instruction: "Fill in the missing adjective endings.",
       question: "Der alt____ Mann schenkt dem klein____ Kind einen Apfel. (Format answer: ending1, ending2)",
-      answer: "e, en"
+      answer: ["e, en", "e,en"]
     },
     {
       instruction: "Complete the sentence using Perfekt or Präteritum.",
@@ -351,8 +354,10 @@
     {
       instruction: "Combine the sentences using the conjunction in brackets. Mind the word order!",
       question: "Rufen Sie mich an! Sie kommen am Bahnhof an. (wenn)",
-      answer: "Rufen Sie mich an, wenn Sie am Bahnhof ankommen.",
-              "Wenn Sie am Bahnhof ankommen, rufen Sie mich an."
+      answer: [
+        "Rufen Sie mich an, wenn Sie am Bahnhof ankommen.",
+        "Wenn Sie am Bahnhof ankommen, rufen Sie mich an."
+      ]
     },
     {
       instruction: "Fill in the correct adjective ending.",
@@ -402,13 +407,12 @@
     {
       instruction: "Combine the sentences using the conjunction in brackets. Mind the word order!",
       question: "Maria bleibt heute zu Hause. Sie ist krank. (denn)",
-      answer: "Maria bleibt heute zu Hause, denn sie ist krank.",
-              "Denn sie krank ist, Maria bleibt heute zu Hause."
+      answer: "Maria bleibt heute zu Hause, denn sie ist krank."
     },
     {
       instruction: "Fill in the correct adjective ending.",
       question: "Sie sucht ein____ günstig____ Wohnung. (Format answer: ending1, ending2)",
-      answer: "e, e"
+      answer: ["e, e", "e,e"]
     },
     {
       instruction: "Complete the sentence using Perfekt or Präteritum.",
@@ -435,11 +439,27 @@
   const reloadModal = document.getElementById("reloadModal");
   const modalBox = document.getElementById("modalBox");
 
+  // Helper function to validate user answer against array or string answers
+  function checkAnswer(userAns, correctAnswer) {
+    const cleanUser = (userAns || "").trim().toLowerCase();
+    if (Array.isArray(correctAnswer)) {
+      return correctAnswer.some(ans => ans.trim().toLowerCase() === cleanUser);
+    }
+    return cleanUser === (correctAnswer || "").trim().toLowerCase();
+  }
+
+  // Helper function to display correct answer string representation
+  function getDisplayAnswer(correctAnswer) {
+    if (Array.isArray(correctAnswer)) {
+      return correctAnswer.join(" OR ");
+    }
+    return correctAnswer;
+  }
+
   // Function to trigger the shake penalty animation
   function triggerPenaltyAnimation() {
     modalBox.classList.remove("penalty-shake");
-    // Trigger reflow to restart animation
-    void modalBox.offsetWidth;
+    void modalBox.offsetWidth; // Trigger reflow to restart animation
     modalBox.classList.add("penalty-shake");
   }
 
@@ -542,7 +562,7 @@
     let score = 0;
     questions.forEach((q, i) => {
       const userAns = userAnswers[i];
-      if (userAns.toLowerCase() === q.answer.toLowerCase()) score++;
+      if (checkAnswer(userAns, q.answer)) score++;
     });
 
     localStorage.setItem("quiz_status", "completed");
@@ -564,14 +584,14 @@
 
     questions.forEach((q, i) => {
       const userAns = savedAnswers[i] || "";
-      const isCorrect = userAns.toLowerCase() === q.answer.toLowerCase();
+      const isCorrect = checkAnswer(userAns, q.answer);
 
       const div = document.createElement("div");
       div.className = "result-item";
       div.innerHTML = `
         <p><strong>Q${i + 1}: ${q.question}</strong></p>
         <p>Your Answer: <span class="${isCorrect ? 'correct' : 'incorrect'}">${userAns || '(No Answer)'}</span></p>
-        ${!isCorrect ? `<p>Correct Answer: <span class="correct">${q.answer}</span></p>` : ''}
+        ${!isCorrect ? `<p>Correct Answer: <span class="correct">${getDisplayAnswer(q.answer)}</span></p>` : ''}
       `;
       reviewContainer.appendChild(div);
     });
