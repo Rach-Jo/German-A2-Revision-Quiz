@@ -247,7 +247,7 @@
   <div id="start-screen" class="screen active">
     <h1>Deutsch A2 Revision Quiz</h1>
     <p>Test your German grammar before moving into B1. This test consists of 25 questions covering past tenses, connectors, prepositions, adjective endings, and modal verbs.</p>
-    <p><em>Note: Refreshing or exiting during the quiz is locked. Scanning the QR code is required to start a new attempt.</em></p>
+    <p><em>Note: Do not refresh or exit while solving the quiz.</em></p>
     <div style="flex: 1;"></div>
     <button id="start-btn">Start Quiz</button>
   </div>
@@ -273,6 +273,7 @@
     <h2>Quiz Complete!</h2>
     <p id="score-text">Your score: 0 / 25</p>
     <div id="review-container" style="flex: 1; overflow-y: auto; margin-bottom: 20px;"></div>
+    <button id="restart-btn" class="btn-secondary">Take Quiz Again</button>
   </div>
 
 </div>
@@ -280,13 +281,13 @@
 <!-- PERMANENT CUSTOM WARNING SCREEN -->
 <div class="overlay-modal reload-warning-modal" id="reloadModal">
   <div class="modal-box reload-warning-box" id="modalBox">
-    <h2>🚨 REFRESH LOCKED</h2>
-    <p style="font-size: 0.95rem; color: #c7d2fe; margin-top: 12px;">Scan the QR code again freshly to restart the puzzle.</p>
+    <h2>🚨 REFRESH DETECTED</h2>
+    <p style="font-size: 0.95rem; color: #c7d2fe; margin-top: 12px;">Refreshing is disabled during an active quiz attempt.</p>
+    <button id="dismiss-modal-btn" style="margin-top: 16px; width: 100%;">Resume Quiz</button>
   </div>
 </div>
 
 <script>
-  // Corrected questions array with acceptable answers as arrays where applicable
   const questions = [
     {
       instruction: "Fill in the correct modal verb in the past tense (Präteritum).",
@@ -430,6 +431,7 @@
   const quizScreen = document.getElementById("quiz-screen");
   const resultScreen = document.getElementById("result-screen");
   const startBtn = document.getElementById("start-btn");
+  const restartBtn = document.getElementById("restart-btn");
   const prevBtn = document.getElementById("prev-btn");
   const nextBtn = document.getElementById("next-btn");
   const instructionElem = document.getElementById("instruction");
@@ -438,6 +440,7 @@
   const progressElem = document.getElementById("progress");
   const reloadModal = document.getElementById("reloadModal");
   const modalBox = document.getElementById("modalBox");
+  const dismissModalBtn = document.getElementById("dismiss-modal-btn");
 
   // Helper function to validate user answer against array or string answers
   function checkAnswer(userAns, correctAnswer) {
@@ -459,33 +462,24 @@
   // Function to trigger the shake penalty animation
   function triggerPenaltyAnimation() {
     modalBox.classList.remove("penalty-shake");
-    void modalBox.offsetWidth; // Trigger reflow to restart animation
+    void modalBox.offsetWidth;
     modalBox.classList.add("penalty-shake");
   }
 
-  // Check URL parameters for reset key from QR code
-  const urlParams = new URLSearchParams(window.location.search);
-  const resetParam = urlParams.get('reset');
-
-  // Scanning teacher's QR code with ?reset=true clears the lock
-  if (resetParam === 'true') {
-    localStorage.removeItem("quiz_status");
-    localStorage.removeItem("quiz_score");
-    localStorage.removeItem("quiz_answers");
-    window.history.replaceState({}, document.title, window.location.pathname);
-  }
-
-  // On page load, verify if the quiz was already active or completed
+  // Clear session lock on initial load so QR code scans always work cleanly
   window.addEventListener("DOMContentLoaded", () => {
-    const status = localStorage.getItem("quiz_status");
-
-    if (status === "in_progress" || status === "completed") {
+    const sessionActive = sessionStorage.getItem("quiz_active");
+    if (sessionActive === "true") {
       reloadModal.classList.add("active");
       triggerPenaltyAnimation();
     }
   });
 
-  // Native navigation warning prompt
+  dismissModalBtn.addEventListener("click", () => {
+    reloadModal.classList.remove("active");
+  });
+
+  // Navigation prompt while quiz is ongoing
   window.addEventListener("beforeunload", (e) => {
     if (quizActive) {
       e.preventDefault();
@@ -507,14 +501,21 @@
     }
   });
 
-  // Start Quiz
-  startBtn.addEventListener("click", () => {
+  // Start Quiz Function
+  function startQuiz() {
     quizActive = true;
-    localStorage.setItem("quiz_status", "in_progress");
+    sessionStorage.setItem("quiz_active", "true");
+    userAnswers = new Array(questions.length).fill("");
+    currentQuestionIndex = 0;
+    
     startScreen.classList.remove("active");
+    resultScreen.classList.remove("active");
     quizScreen.classList.add("active");
     loadQuestion(0);
-  });
+  }
+
+  startBtn.addEventListener("click", startQuiz);
+  restartBtn.addEventListener("click", startQuiz);
 
   // Load Question Data
   function loadQuestion(index) {
@@ -558,6 +559,7 @@
   // Finish Quiz
   function finishQuiz() {
     quizActive = false;
+    sessionStorage.removeItem("quiz_active");
     
     let score = 0;
     questions.forEach((q, i) => {
@@ -565,25 +567,18 @@
       if (checkAnswer(userAns, q.answer)) score++;
     });
 
-    localStorage.setItem("quiz_status", "completed");
-    localStorage.setItem("quiz_score", score);
-    localStorage.setItem("quiz_answers", JSON.stringify(userAnswers));
-
-    showCompletedResults();
+    showCompletedResults(score);
   }
 
-  function showCompletedResults() {
+  function showCompletedResults(score) {
     quizScreen.classList.remove("active");
     resultScreen.classList.add("active");
-
-    const savedAnswers = JSON.parse(localStorage.getItem("quiz_answers")) || [];
-    const savedScore = localStorage.getItem("quiz_score") || 0;
 
     const reviewContainer = document.getElementById("review-container");
     reviewContainer.innerHTML = "";
 
     questions.forEach((q, i) => {
-      const userAns = savedAnswers[i] || "";
+      const userAns = userAnswers[i] || "";
       const isCorrect = checkAnswer(userAns, q.answer);
 
       const div = document.createElement("div");
@@ -596,7 +591,7 @@
       reviewContainer.appendChild(div);
     });
 
-    document.getElementById("score-text").textContent = `Your score: ${savedScore} / ${questions.length}`;
+    document.getElementById("score-text").textContent = `Your score: ${score} / ${questions.length}`;
   }
 </script>
 
