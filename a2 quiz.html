@@ -34,7 +34,7 @@
 
     .quiz-container {
       background-color: var(--card-bg);
-      padding: 20px 16px 80px 16px; /* Extra bottom padding for sticky mobile nav */
+      padding: 20px 16px 80px 16px;
       border-radius: var(--border-radius);
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
       width: 100%;
@@ -119,7 +119,6 @@
       font-weight: 600;
     }
 
-    /* MOBILE-OPTIMIZED STICKY NAV BUTTONS */
     .nav-buttons {
       display: flex;
       gap: 10px;
@@ -140,7 +139,7 @@
       font-weight: 600;
       border-radius: 8px;
       cursor: pointer;
-      min-height: 48px; /* Mobile touch target standard */
+      min-height: 48px;
       flex: 1;
       display: flex;
       justify-content: center;
@@ -179,55 +178,6 @@
       font-weight: bold;
     }
 
-    /* CUSTOM POPUP MODAL STYLES */
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.65);
-      z-index: 1000;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-
-    .modal-overlay.active {
-      display: flex;
-    }
-
-    .modal-content {
-      background: var(--card-bg);
-      padding: 24px 20px;
-      border-radius: var(--border-radius);
-      width: 100%;
-      max-width: 360px;
-      text-align: center;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-      border-top: 6px solid var(--danger-color);
-    }
-
-    .modal-content h3 {
-      color: var(--danger-color);
-      margin-top: 0;
-      font-size: 1.3rem;
-    }
-
-    .modal-content p {
-      font-size: 0.95rem;
-      color: var(--text-color);
-      margin-bottom: 20px;
-      line-height: 1.4;
-    }
-
-    .modal-btn {
-      background-color: var(--danger-color);
-      width: 100%;
-    }
-
-    /* SCREEN-SPECIFIC ADJUSTMENTS */
     @media (max-width: 480px) {
       body {
         padding: 0;
@@ -247,9 +197,9 @@
   
   <!-- START SCREEN -->
   <div id="start-screen" class="screen active">
-    <h1>A2 German Final Revision Quiz</h1>
-    <p>Test your German grammar before moving into B1. This test consists of 25 jumbled questions covering past tenses, connectors, prepositions, adjective endings, and modal verbs.</p>
-    <p><em>Note: Refreshing or leaving the page during the quiz is locked to prevent losing your progress.</em></p>
+    <h1>A2 Revision Quiz</h1>
+    <p>Test your German grammar before moving into B1. This test consists of 25 questions covering past tenses, connectors, prepositions, adjective endings, and modal verbs.</p>
+    <p><em>Note: Leaving or reloading the page during the quiz will restart your attempt.</em></p>
     <div style="flex: 1;"></div>
     <button id="start-btn">Start Quiz</button>
   </div>
@@ -280,15 +230,6 @@
 
 </div>
 
-<!-- REFRESH LOCKED POPUP MODAL -->
-<div id="refresh-modal" class="modal-overlay">
-  <div class="modal-content">
-    <h3>Refresh Locked!</h3>
-    <p>You cannot refresh or leave the page during an active quiz session. Please complete the quiz first.</p>
-    <button id="close-modal-btn" class="modal-btn">Return to Quiz</button>
-  </div>
-</div>
-
 <script>
   const questions = [
     {
@@ -313,7 +254,7 @@
     },
     {
       instruction: "Complete the sentence using Perfekt or Präteritum.",
-      question: "Letzten Sommer ________ ich nach Berlin ________ (fahren). (Format answer: auxiliary verb)",
+      question: "Letzten Sommer ________ ich nach Berlin ________ (fahren).",
       answer: "bin gefahren"
     },
     {
@@ -328,8 +269,8 @@
     },
     {
       instruction: "Combine the sentences using the conjunction in brackets. Mind the word order!",
-      question: "Das Wetter war schlecht. Wir sind im Park spazieren gegangen. (obwohl)",
-      answer: "Das Wetter war schlecht, obwohl wir im Park spazieren gegangen sind."
+      question: "Wir sind im Park spazieren gegangen. Das Wetter war schlecht. (obwohl)",
+      answer: "Wir sind im Park spazieren gegangen, obwohl das Wetter schlecht war."
     },
     {
       instruction: "Fill in the missing adjective endings.",
@@ -363,7 +304,7 @@
     },
     {
       instruction: "Complete the sentence using Perfekt or Präteritum.",
-      question: "Wir ________ das ganze Wochenende für die Prüfung ________ (lernen). (Format answer: auxiliary verb)",
+      question: "Wir ________ das ganze Wochenende für die Prüfung ________ (lernen).",
       answer: "haben gelernt"
     },
     {
@@ -387,9 +328,9 @@
       answer: "en"
     },
     {
-      instruction: "Complete the sentence using Perfekt or Präteritum.",
-      question: "Als Kind ________ er keinen Kaffee ________ (mögen). (Format answer: auxiliary verb)",
-      answer: "hat gemocht"
+      instruction: "Fill in the correct past tense of mögen.",
+      question: "Als Kind ________ er keinen Kaffee. (mögen)",
+      answer: "mochte"
     },
     {
       instruction: "Fill in the correct modal verb in the past tense (Präteritum).",
@@ -413,7 +354,7 @@
     },
     {
       instruction: "Complete the sentence using Perfekt or Präteritum.",
-      question: "________ du schon einmal in Deutschland ________? (sein) (Format answer: auxiliary verb)",
+      question: "________ du schon einmal in Deutschland ________? (sein)",
       answer: "bist gewesen"
     }
   ];
@@ -435,37 +376,28 @@
   const userAnswerInput = document.getElementById("user-answer");
   const progressElem = document.getElementById("progress");
 
-  // Modal Elements
-  const refreshModal = document.getElementById("refresh-modal");
-  const closeModalBtn = document.getElementById("close-modal-btn");
-
-  // Show Custom Refresh Modal
-  function showRefreshModal() {
-    refreshModal.classList.add("active");
-  }
-
-  // Close Custom Refresh Modal
-  closeModalBtn.addEventListener("click", () => {
-    refreshModal.classList.remove("active");
-  });
-
-  // Intercept Refresh Key Shortcuts (F5, Ctrl+R, Cmd+R)
-  window.addEventListener("keydown", (e) => {
-    if (quizActive) {
-      if (e.key === "F5" || (e.ctrlKey && e.key.toLowerCase() === "r") || (e.metaKey && e.key.toLowerCase() === "r")) {
-        e.preventDefault();
-        showRefreshModal();
-      }
-    }
-  });
-
-  // Native Browser Prevent Navigation Warning
+  // Prevent Navigation or Reload during active quiz
   window.addEventListener("beforeunload", (e) => {
     if (quizActive) {
       e.preventDefault();
-      e.returnValue = "Refresh locked!";
-      showRefreshModal();
-      return "Refresh locked!";
+      e.returnValue = ""; // Triggers browser native confirmation dialog
+    }
+  });
+
+  // Intercept Keyboard Shortcuts for Reload (F5, Ctrl+R, Cmd+R)
+  window.addEventListener("keydown", (e) => {
+    if (quizActive) {
+      const isF5 = e.key === "F5";
+      const isCtrlR = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "r";
+      
+      if (isF5 || isCtrlR) {
+        e.preventDefault();
+        const confirmLeave = confirm("Warning: Refreshing will cause you to lose your quiz progress. Are you sure you want to reload?");
+        if (confirmLeave) {
+          quizActive = false;
+          location.reload();
+        }
+      }
     }
   });
 
@@ -487,7 +419,6 @@
     questionTextElem.textContent = questions[index].question;
     userAnswerInput.value = userAnswers[index] || "";
 
-    // Button states
     prevBtn.disabled = index === 0;
     nextBtn.textContent = index === questions.length - 1 ? "Finish / Submit" : "Next";
   }
