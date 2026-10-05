@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>A2 German Grammar Review Quiz</title>
+  <style>
+    :root {
+      --primary-color: #0056b3;
+      --secondary-color: #6c757d;
+      --danger-color: #dc3545;
+      --bg-color: #f4f6f9;
+      --card-bg: #ffffff;
+      --text-color: #212529;
+      --border-radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 12px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .quiz-container {
+      background-color: var(--card-bg);
+      padding: 20px 16px 80px 16px; /* Extra bottom padding for sticky mobile nav */
+      border-radius: var(--border-radius);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      width: 100%;
+      max-width: 600px;
+      position: relative;
+      min-height: 85vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .screen {
+      display: none;
+      width: 100%;
+      flex: 1;
+    }
+
+    .screen.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      color: var(--primary-color);
+      margin-top: 0;
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      font-size: 1.3rem;
+      color: var(--primary-color);
+      margin-top: 0;
+    }
+
+    .instruction {
+      background-color: #e9f2ff;
+      border-left: 4px solid var(--primary-color);
+      padding: 12px;
+      margin-bottom: 16px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .question-box {
+      margin-bottom: 20px;
+      flex: 1;
+    }
+
+    .question-text {
+      font-size: 1.1rem;
+      margin-bottom: 16px;
+      line-height: 1.5;
+      font-weight: 500;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 14px 12px;
+      font-size: 1.05rem;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      box-sizing: border-box;
+      margin-top: 5px;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--primary-color);
+      outline: none;
+      background-color: #fff;
+    }
+
+    .progress {
+      font-size: 0.8rem;
+      color: var(--secondary-color);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+
+    /* MOBILE-OPTIMIZED STICKY NAV BUTTONS */
+    .nav-buttons {
+      display: flex;
+      gap: 10px;
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      right: 16px;
+      background-color: var(--card-bg);
+      padding-top: 8px;
+    }
+
+    button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 14px 20px;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      min-height: 48px; /* Mobile touch target standard */
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: background-color 0.15s ease, transform 0.1s ease;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    button:disabled {
+      background-color: #e0e0e0;
+      color: #9e9e9e;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-secondary {
+      background-color: var(--secondary-color);
+    }
+
+    .result-item {
+      padding: 12px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 0.95rem;
+    }
+
+    .correct {
+      color: #28a745;
+      font-weight: bold;
+    }
+
+    .incorrect {
+      color: var(--danger-color);
+      font-weight: bold;
+    }
+
+    /* CUSTOM POPUP MODAL STYLES */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.65);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--card-bg);
+      padding: 24px 20px;
+      border-radius: var(--border-radius);
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      border-top: 6px solid var(--danger-color);
+    }
+
+    .modal-content h3 {
+      color: var(--danger-color);
+      margin-top: 0;
+      font-size: 1.3rem;
+    }
+
+    .modal-content p {
+      font-size: 0.95rem;
+      color: var(--text-color);
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .modal-btn {
+      background-color: var(--danger-color);
+      width: 100%;
+    }
+
+    /* SCREEN-SPECIFIC ADJUSTMENTS */
+    @media (max-width: 480px) {
+      body {
+        padding: 0;
+      }
+
+      .quiz-container {
+        min-height: 100vh;
+        border-radius: 0;
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="quiz-container">
+  
+  <!-- START SCREEN -->
+  <div id="start-screen" class="screen active">
+    <h1>A2 German Final Revision Quiz</h1>
+    <p>Test your German grammar before moving into B1. This test consists of 25 jumbled questions covering past tenses, connectors, prepositions, adjective endings, and modal verbs.</p>
+    <p><em>Note: Refreshing or leaving the page during the quiz is locked to prevent losing your progress.</em></p>
+    <div style="flex: 1;"></div>
+    <button id="start-btn">Start Quiz</button>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div id="quiz-screen" class="screen">
+    <div class="progress" id="progress">Question 1 of 25</div>
+    <div class="instruction" id="instruction">Instruction goes here...</div>
+    
+    <div class="question-box">
+      <div class="question-text" id="question-text">Question prompt...</div>
+      <input type="text" id="user-answer" placeholder="Type your answer..." autocomplete="off" autocapitalize="none">
+    </div>
+
+    <div class="nav-buttons">
+      <button id="prev-btn" class="btn-secondary" disabled>Previous</button>
+      <button id="next-btn">Next</button>
+    </div>
+  </div>
+
+  <!-- RESULTS SCREEN -->
+  <div id="result-screen" class="screen">
+    <h2>Quiz Complete!</h2>
+    <p id="score-text">Your score: 0 / 25</p>
+    <div id="review-container" style="flex: 1; overflow-y: auto; margin-bottom: 20px;"></div>
+    <button id="restart-btn">Try Again</button>
+  </div>
+
+</div>
+
+<!-- REFRESH LOCKED POPUP MODAL -->
+<div id="refresh-modal" class="modal-overlay">
+  <div class="modal-content">
+    <h3>Refresh Locked!</h3>
+    <p>You cannot refresh or leave the page during an active quiz session. Please complete the quiz first.</p>
+    <button id="close-modal-btn" class="modal-btn">Return to Quiz</button>
+  </div>
+</div>
+
+<script>
+  const questions = [
+    {
+      instruction: "Fill in the correct modal verb in the past tense (Präteritum).",
+      question: "Gestern ________ ich bis 20 Uhr arbeiten. (müssen)",
+      answer: "musste"
+    },
+    {
+      instruction: "Fill in the correct article (dem / den / das / der / die).",
+      question: "Das Buch liegt auf ________ (die) Waschmaschine. (Wo?)",
+      answer: "der"
+    },
+    {
+      instruction: "Combine the sentences using the conjunction in brackets. Mind the word order!",
+      question: "Ich lerne Deutsch. Ich möchte in Deutschland arbeiten. (weil)",
+      answer: "Ich lerne Deutsch, weil ich in Deutschland arbeiten möchte."
+    },
+    {
+      instruction: "Fill in the correct adjective ending.",
+      question: "Ich kaufe ein rot____ Buch.",
+      answer: "es"
+    },
+    {
+      instruction: "Complete the sentence using Perfekt or Präteritum.",
+      question: "Letzten Sommer ________ ich nach Berlin ________ (fahren). (Format answer: auxiliary verb)",
+      answer: "bin gefahren"
+    },
+    {
+      instruction: "Fill in the correct modal verb in the past tense (Präteritum).",
+      question: "Als sie 10 Jahre alt war, ________ sie sehr gut schwimmen. (können)",
+      answer: "konnte"
+    },
+    {
+      instruction: "Fill in the correct article (dem / den / das / der / die).",
+      question: "Der Hund liegt unter ________ (das) Tisch. (Wo?)",
+      answer: "dem"
+    },
+    {
+      instruction: "Combine the sentences using the conjunction in brackets. Mind the word order!",
+      question: "Das Wetter war schlecht. Wir sind im Park spazieren gegangen. (obwohl)",
+      answer: "Das Wetter war schlecht, obwohl wir im Park spazieren gegangen sind."
+    },
+    {
+      instruction: "Fill in the missing adjective endings.",
+      question: "Der alt____ Mann schenkt dem klein____ Kind einen Apfel. (Format answer: ending1, ending2)",
+      answer: "e, en"
+    },
+    {
+      instruction: "Complete the sentence using Perfekt or Präteritum.",
+      question: "Warum ________ du gestern nicht auf der Party? (sein)",
+      answer: "warst"
+    },
+    {
+      instruction: "Fill in the correct modal verb in the past tense (Präteritum).",
+      question: "Warum ________ du gestern nicht mitkommen? (dürfen)",
+      answer: "durftest"
+    },
+    {
+      instruction: "Fill in the correct article (dem / den / das / der / die).",
+      question: "Ich stelle die Vase auf ________ (der) Tisch. (Wohin?)",
+      answer: "den"
+    },
+    {
+      instruction: "Combine the sentences using the conjunction in brackets. Mind the word order!",
+      question: "Rufen Sie mich an! Sie kommen am Bahnhof an. (wenn)",
+      answer: "Rufen Sie mich an, wenn Sie am Bahnhof ankommen."
+    },
+    {
+      instruction: "Fill in the correct adjective ending.",
+      question: "Haben Sie mit der neu____ Kollegin gesprochen?",
+      answer: "en"
+    },
+    {
+      instruction: "Complete the sentence using Perfekt or Präteritum.",
+      question: "Wir ________ das ganze Wochenende für die Prüfung ________ (lernen). (Format answer: auxiliary verb)",
+      answer: "haben gelernt"
+    },
+    {
+      instruction: "Fill in the correct modal verb in the past tense (Präteritum).",
+      question: "Wir ________ Urlaub machen, aber wir hatten kein Geld. (wollen)",
+      answer: "wollten"
+    },
+    {
+      instruction: "Fill in the correct article (dem / den / das / der / die).",
+      question: "Wir hängen das Bild an ________ (die) Wand. (Wohin?)",
+      answer: "die"
+    },
+    {
+      instruction: "Combine the sentences using the conjunction in brackets. Mind the word order!",
+      question: "Ich weiß nicht. Hat Julia den Schlüssel gefunden? (ob)",
+      answer: "Ich weiß nicht, ob Julia den Schlüssel gefunden hat."
+    },
+    {
+      instruction: "Fill in the correct adjective ending.",
+      question: "Wir wohnen in einer schön____ Stadt.",
+      answer: "en"
+    },
+    {
+      instruction: "Complete the sentence using Perfekt or Präteritum.",
+      question: "Als Kind ________ er keinen Kaffee ________ (mögen). (Format answer: auxiliary verb)",
+      answer: "hat gemocht"
+    },
+    {
+      instruction: "Fill in the correct modal verb in the past tense (Präteritum).",
+      question: "Der Arzt sagte, er ________ mehr Wasser trinken. (sollen)",
+      answer: "sollte"
+    },
+    {
+      instruction: "Fill in the correct article (dem / den / das / der / die).",
+      question: "Er sitzt zwischen ________ (die - Plural) Kindern. (Wo?)",
+      answer: "den"
+    },
+    {
+      instruction: "Combine the sentences using the conjunction in brackets. Mind the word order!",
+      question: "Maria bleibt heute zu Hause. Sie ist krank. (denn)",
+      answer: "Maria bleibt heute zu Hause, denn sie ist krank."
+    },
+    {
+      instruction: "Fill in the correct adjective ending.",
+      question: "Sie sucht ein____ günstig____ Wohnung. (Format answer: ending1, ending2)",
+      answer: "e, e"
+    },
+    {
+      instruction: "Complete the sentence using Perfekt or Präteritum.",
+      question: "________ du schon einmal in Deutschland ________? (sein) (Format answer: auxiliary verb)",
+      answer: "bist gewesen"
+    }
+  ];
+
+  let currentQuestionIndex = 0;
+  let userAnswers = new Array(questions.length).fill("");
+  let quizActive = false;
+
+  // DOM Elements
+  const startScreen = document.getElementById("start-screen");
+  const quizScreen = document.getElementById("quiz-screen");
+  const resultScreen = document.getElementById("result-screen");
+  const startBtn = document.getElementById("start-btn");
+  const prevBtn = document.getElementById("prev-btn");
+  const nextBtn = document.getElementById("next-btn");
+  const restartBtn = document.getElementById("restart-btn");
+  const instructionElem = document.getElementById("instruction");
+  const questionTextElem = document.getElementById("question-text");
+  const userAnswerInput = document.getElementById("user-answer");
+  const progressElem = document.getElementById("progress");
+
+  // Modal Elements
+  const refreshModal = document.getElementById("refresh-modal");
+  const closeModalBtn = document.getElementById("close-modal-btn");
+
+  // Show Custom Refresh Modal
+  function showRefreshModal() {
+    refreshModal.classList.add("active");
+  }
+
+  // Close Custom Refresh Modal
+  closeModalBtn.addEventListener("click", () => {
+    refreshModal.classList.remove("active");
+  });
+
+  // Intercept Refresh Key Shortcuts (F5, Ctrl+R, Cmd+R)
+  window.addEventListener("keydown", (e) => {
+    if (quizActive) {
+      if (e.key === "F5" || (e.ctrlKey && e.key.toLowerCase() === "r") || (e.metaKey && e.key.toLowerCase() === "r")) {
+        e.preventDefault();
+        showRefreshModal();
+      }
+    }
+  });
+
+  // Native Browser Prevent Navigation Warning
+  window.addEventListener("beforeunload", (e) => {
+    if (quizActive) {
+      e.preventDefault();
+      e.returnValue = "Refresh locked!";
+      showRefreshModal();
+      return "Refresh locked!";
+    }
+  });
+
+  // Start Quiz
+  startBtn.addEventListener("click", () => {
+    quizActive = true;
+    startScreen.classList.remove("active");
+    quizScreen.classList.add("active");
+    loadQuestion(0);
+  });
+
+  // Load Question Data
+  function loadQuestion(index) {
+    saveCurrentAnswer();
+    currentQuestionIndex = index;
+
+    progressElem.textContent = `Question ${index + 1} of ${questions.length}`;
+    instructionElem.textContent = questions[index].instruction;
+    questionTextElem.textContent = questions[index].question;
+    userAnswerInput.value = userAnswers[index] || "";
+
+    // Button states
+    prevBtn.disabled = index === 0;
+    nextBtn.textContent = index === questions.length - 1 ? "Finish / Submit" : "Next";
+  }
+
+  // Save Answer
+  function saveCurrentAnswer() {
+    if (quizActive) {
+      userAnswers[currentQuestionIndex] = userAnswerInput.value.trim();
+    }
+  }
+
+  // Next Button
+  nextBtn.addEventListener("click", () => {
+    saveCurrentAnswer();
+    if (currentQuestionIndex < questions.length - 1) {
+      loadQuestion(currentQuestionIndex + 1);
+    } else {
+      finishQuiz();
+    }
+  });
+
+  // Previous Button
+  prevBtn.addEventListener("click", () => {
+    saveCurrentAnswer();
+    if (currentQuestionIndex > 0) {
+      loadQuestion(currentQuestionIndex - 1);
+    }
+  });
+
+  // Finish Quiz
+  function finishQuiz() {
+    quizActive = false;
+    quizScreen.classList.remove("active");
+    resultScreen.classList.add("active");
+
+    let score = 0;
+    const reviewContainer = document.getElementById("review-container");
+    reviewContainer.innerHTML = "";
+
+    questions.forEach((q, i) => {
+      const userAns = userAnswers[i];
+      const isCorrect = userAns.toLowerCase() === q.answer.toLowerCase();
+      if (isCorrect) score++;
+
+      const div = document.createElement("div");
+      div.className = "result-item";
+      div.innerHTML = `
+        <p><strong>Q${i + 1}: ${q.question}</strong></p>
+        <p>Your Answer: <span class="${isCorrect ? 'correct' : 'incorrect'}">${userAns || '(No Answer)'}</span></p>
+        ${!isCorrect ? `<p>Correct Answer: <span class="correct">${q.answer}</span></p>` : ''}
+      `;
+      reviewContainer.appendChild(div);
+    });
+
+    document.getElementById("score-text").textContent = `Your score: ${score} / ${questions.length}`;
+  }
+
+  // Restart Quiz
+  restartBtn.addEventListener("click", () => {
+    userAnswers = new Array(questions.length).fill("");
+    currentQuestionIndex = 0;
+    resultScreen.classList.remove("active");
+    startScreen.classList.add("active");
+  });
+</script>
+
+</body>
+</html>
